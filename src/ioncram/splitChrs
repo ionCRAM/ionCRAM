@@ -1,0 +1,46 @@
+#! /usr/bin/env python3
+import sys
+import functools
+import subprocess
+
+def getReads(bamFile,chrom,pos):
+    process=subprocess.Popen(['samtools','view',bamFile,"%s:%d-%d"%(chrom,pos,pos)],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output,errors=process.communicate() 
+    output=output.decode('UTF-8').split("\n")
+    output=filter(lambda l: l!='' ,output)
+    output=["\t".join(l.split("\t")[:4]) for l in output]    
+    return(output)
+
+
+
+bamFile=sys.argv[1]
+process=subprocess.Popen(['samtools','view','-H',bamFile],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+output,errors=process.communicate() 
+output=output.decode('UTF-8').split("\n")
+output=filter(lambda l: len(l)>3 and l[:3]=='@SQ' ,output)
+
+chrs=[l.strip().split("\t")for l in output]
+chrs=[[l[1][3:],[0,int(l[2][3:])]] for l in chrs]
+
+totalLength=0
+for l in chrs:
+    totalLength+=l[1][1]
+average=totalLength/len(chrs)
+newchrs=[]
+for c in chrs:
+    if c[1][1]>1.5*average:
+        midpoint=int(c[1][1]/2)
+        length=int(c[1][1])
+        newchrs.append([c[0],[0,midpoint]])
+        newchrs.append([c[0],[midpoint,length]])
+    else:
+        newchrs.append(c)
+
+
+
+print("%s\t%s:%d-%d"%(newchrs[0][0],newchrs[0][0],newchrs[0][1][0],newchrs[0][1][1]))
+for i in range(1,len(newchrs)):
+    splitName=newchrs[i][0]
+    if newchrs[i-1][0] == newchrs[i][0]:
+        splitName+=".%d"%(i)
+    print("%s\t%s:%d-%d"%(splitName,newchrs[i][0],newchrs[i][1][0],newchrs[i][1][1]))

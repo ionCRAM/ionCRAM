@@ -1,0 +1,68 @@
+#! /usr/bin/env python3
+
+import argparse
+import sys
+import subprocess
+import shutil
+import os
+
+
+
+
+def main(argv):
+    scripts_to_edit=['_compressFlowSignal_deez.sh',
+                     '_compressFlowSignal_FR.sh',
+                     '_compressFlowSignal_loosy.sh',
+                     '_compressFlowSignal.sh',
+                     '_decompressFlowSignal_deez.sh',
+                     '_decompressFlowSignal.sh',
+                     '_ioncram',
+                     '_decompressor.sh',
+                     '_Makefile']
+
+
+    if len(argv)==1  and argv[0]=='clean' :
+        for s in scripts_to_edit:
+            os.remove(s[1:])
+        return 0
+        
+    parser = argparse.ArgumentParser(prog='configure',
+                                     description='configure the makefiles for ioncram before building .Developed by mostafa.shokrof@gmail.com and mabouelhoda@yahoo.com',
+                                     usage='./configure <binDir> <deezPath>')
+    
+    currentDirectory=os.getcwd()+"/bin/"
+
+    parser.add_argument('--binDir',dest='binDir',required=False, default=currentDirectory,
+                        help='Directory for the output binaries. default is %s'%(currentDirectory))
+    parser.add_argument('--deezPath',dest='deezPath',required=False, default='',
+                                                help='Path for deez binary. Default value is "" which means that deez will not be supported')
+
+
+
+
+
+    args = parser.parse_args(argv)
+
+    
+    if args.binDir[-1]!='/':
+        args.binDir+='/'
+    
+
+
+    for script in scripts_to_edit:
+        input=open(script)
+        output=open(script[1:],'w')
+        for l in input:
+            l=l[:-1]
+            if l=='binFolder=':
+                l+="'%s'"%(args.binDir)
+            if l=='deezBinary=':
+                l+="'%s'"%(args.deezPath)
+            output.write(l+"\n")
+        input.close()
+        output.close()
+
+
+
+if __name__=='__main__':
+    main(sys.argv[1:])

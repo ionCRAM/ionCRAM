@@ -1,0 +1,111 @@
+#! /usr/bin/env python3
+
+import argparse
+import sys
+import subprocess
+import shutil
+import os
+import re
+
+
+def is_tool(name):
+    try:
+        devnull = open(os.devnull)
+        subprocess.Popen([name,"--version"], stdout=devnull, stderr=devnull).communicate()
+    except OSError as e:
+        if e.errno == os.errno.ENOENT:
+            return False
+    return True
+
+def main(argv):
+    parser = argparse.ArgumentParser(prog='configure',
+                                     description='configure the makefiles for ioncram before building .Developed by mostafa.shokrof@gmail.com and mabouelhoda@yahoo.com',
+                                     usage='./configure <binDir> <deezPath>')
+    currentDirectory=os.getcwd()+"/bin/"
+
+    parser.add_argument('--binDir',dest='binDir',required=False, default=currentDirectory,
+                        help='Directory for the output binaries. default is %s'%(currentDirectory))
+    parser.add_argument('--deezPath',dest='deezPath',required=False, default='',
+                                                help='Path for deez binary. Default value is "" which means that deez will not be supported')
+
+    args = parser.parse_args(argv)
+
+    commands=[ ['autoheader'],
+               ['autoconf','-Wno-syntax'],
+               ['./configure','CFLAGS=-O3' ,'CPPFLAGS=-O3', '--prefix=%s'%(args.binDir)]
+             ]
+    # for c in commands:
+    #     process=subprocess.Popen(c,stdout=sys.stdout, stderr=sys.stderr,cwd='src/icram/')
+    #     output,errors=process.communicate()
+
+    scramblePath=os.getcwd()+'/src/io_lib/'
+    commands=[ ['autoreconf','-i'],
+               ['./configure','CFLAGS=-O3' ,'CPPFLAGS=-O3', '--prefix=%s'%(scramblePath+"/build/")],
+             ]
+    for c in commands:
+        process=subprocess.Popen(c,stdout=sys.stdout, stderr=sys.stderr,cwd=scramblePath)
+        output,errors=process.communicate()
+
+    if not is_tool('parallel'):
+        print("parallel tool is not installed. Please Install it")
+        print("ubuntu: apt-get install parallel")
+        print("centos: yum install parallel")
+        return -1
+
+    if not is_tool('xz'):
+        print("xz tool is not installed. Please Install it")
+        print("ubuntu: apt-get install liblzma-dev")
+        print("centos: yum install xz-devel")
+        return -1
+
+    if not is_tool('zstd'):
+        print("zstd tool is not installed. Please Install it")
+        print("ubuntu: apt-get install zstd")
+        print("centos: yum install zstd")
+        return -1
+
+
+    if not is_tool('file'):
+        print("file tool is not installed. Please Install it")
+        print("ubuntu: apt-get install file")
+        print("centos: yum install file")
+        return -1
+
+    if not is_tool('/usr/bin/time'):
+        print("time tool is not installed. Please Install it")
+        print("ubuntu: apt-get install time")
+        print("centos: yum install time")
+        return -1
+
+    if not is_tool('samtools'):
+        print("samtools(1.4>=) is not installed. Please Install it")
+        print("ubuntu: apt-get install samtools")
+        print("centos: install samtools from https://sourceforge.net/projects/samtools/files/samtools/")
+        return -1
+    else:
+        process=subprocess.Popen(['samtools'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output,errors=process.communicate()
+        errors=errors.decode('UTF-8').strip()
+        errors=errors.split("\n")
+        errors=list(filter(lambda x: "Version" in x ,errors))
+        versionNumber=re.match("Version: ([0-9.]*)",errors[0]).groups()[0]
+        versionNumber=versionNumber[::-1].replace(".","",versionNumber.count(".")-1)[::-1]
+        versionNumber=float(versionNumber)
+        if versionNumber<1.4:
+            print("samtools(%.2f) is installed; while, samtools(1.4>=) is needed. Please Install it"%versionNumber)
+            print("ubuntu: apt-get install samtools")
+            print("centos: install samtools from https://sourceforge.net/projects/samtools/files/samtools/")
+            return -1
+            
+
+    if args.deezPath:
+        if not is_tool(args.deezPath):
+            print("Cannot find deez binary")
+
+    process=subprocess.Popen(['./configure','--binDir',args.binDir, '--deezPath',args.deezPath]
+    ,stdout=sys.stdout, stderr=sys.stderr,cwd='src/ioncram/')
+    output,errors=process.communicate()
+
+
+if __name__=='__main__':
+    main(sys.argv[1:])
