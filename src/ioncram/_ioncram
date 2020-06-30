@@ -67,6 +67,9 @@ def compressMain(argv):
     optional.add_argument('-s','--num-splits', dest='splits', default='1',
                     help='Number of splits of bam file to be parallelly computed. default =1')
 
+    optional.add_argument('-n','--binning', dest='binning', default='1',
+                    help='Apply binning technique to the flowsignal to save more space(lossy). default No binning')
+  
     optional.add_argument('-c','--check', dest='check', action='store_const',
                     const='check', default=False,
                     help='Check the compressed file and compare it with the original')
@@ -104,8 +107,8 @@ def compressMain(argv):
              "no",
              "0",
              args.bed,
-             args.splits
-             ,
+             args.splits,
+             args.binning,
              args.outputFile
     ]
 #    print(" ".join(command))

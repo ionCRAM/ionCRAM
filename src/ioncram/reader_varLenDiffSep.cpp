@@ -3,13 +3,14 @@
 #include<cstdlib>
 #include<stdint.h>
 #include<fstream>
-
+#include <math.h>
 
 using namespace std;
 int main(int argc, char * argv[])
 {
   string byteStream=string(argv[1]);
   string shortStream=string(argv[2]);
+  int binning=atoi(argv[3]);
   ifstream inputFileByte(byteStream,ios::binary);
   ifstream inputFileShort(shortStream,ios::binary);
   string line;
@@ -57,9 +58,12 @@ int main(int argc, char * argv[])
       else{
         tmp=tmp2;
       }
-      tmp*=2;
+      //tmp*=2;
+      //prev[prevTop]*=binning;
       prev[prevTop]+=tmp;
-      cout<<prev[prevTop];
+      
+
+      cout<<prev[prevTop]*binning;
       prevTop++;
       if(i!=Novalues-1)
       {

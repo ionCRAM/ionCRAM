@@ -7,7 +7,7 @@ binFolder=
 
 scripts= compressFlowSignal_deez.sh compressFlowSignal_FR.sh compressFlowSignal_loosy.sh
 scripts+=compressFlowSignal.sh decompressFlowSignal_deez.sh decompressFlowSignal.sh decompressor.sh
-scripts+= compare_sam_unaligned.py sizeFormatter.py ioncram cram_size_aggregator splitChrs filterReadsStartBeforeRegion
+scripts+= compare_sam_unaligned.py sizeFormatter.py ioncram cram_size_aggregator splitChrs filterReadsStartBeforeRegion binning reverse_binning
 
 all: writer_varLenDiffSep  reader_varLenDiffSep
 

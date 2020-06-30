@@ -12,7 +12,8 @@ lossy=$4
 threshold=$5
 bedFile=$6
 noSplits=$7
-Out_tar=$8
+binning=$8
+Out_tar=$9
 
 
 binFolder=
@@ -77,11 +78,11 @@ samtools view -H $bam | tee >(xz -c > $tmpFolder/$filename.header.xz)  |grep -v 
 
 parallel --gnu -a $chrs --colsep '\t' -k -j $noSplits  "cat $simpleH <(samtools view  $bed  $bam {2}| ${binFolder}filterReadsStartBeforeRegion {2}) |tee $tmpFolder/tmp.$r.{1}.samIn1 > $tmpFolder/tmp.$r.{1}.samIn2"  &
 
-parallel --gnu -a $chrs --colsep '\t' -j 0   "samtools view -h  -F16   $tmpFolder/tmp.$r.{1}.samIn2 | ${binFolder}compressFlowSignal.sh $ref $tmpFolder/$filename.{1}.forward.tar $compression " & 
+parallel --gnu -a $chrs --colsep '\t' -j 0   "samtools view -h  -F16   $tmpFolder/tmp.$r.{1}.samIn2 | ${binFolder}compressFlowSignal.sh $ref $tmpFolder/$filename.{1}.forward.tar $compression $binning" & 
 
-parallel --gnu -a $chrs --colsep '\t'  -j 0  "samtools view -h  -f16  $tmpFolder/tmp.$r.{1}.samIn1  |  ${binFolder}compressFlowSignal.sh $ref $tmpFolder/$filename.{1}.reverse.tar $compression "   &
+parallel --gnu -a $chrs --colsep '\t'  -j 0  "samtools view -h  -f16  $tmpFolder/tmp.$r.{1}.samIn1  |  ${binFolder}compressFlowSignal.sh $ref $tmpFolder/$filename.{1}.reverse.tar $compression $binning "   &
 
-samtools view -h  $bam "*" | ${binFolder}compressFlowSignal.sh $ref $tmpFolder/$filename.unmapped.tar $compression &
+samtools view -h  $bam "*" | ${binFolder}compressFlowSignal.sh $ref $tmpFolder/$filename.unmapped.tar $compression $binning&
 
 wait
 

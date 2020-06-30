@@ -3,6 +3,7 @@
 #include<cstdlib>
 #include<stdint.h>
 #include<fstream>
+#include <math.h>
 using namespace std;
 
 class outputBuffer{
@@ -52,6 +53,7 @@ int main(int argc, char * argv[])
 {
   string byteStream=string(argv[1]);
   string shortStream=string(argv[2]);
+  float binning=atof(argv[3]);
   outputBuffer outputFileByte(byteStream);
   outputBuffer outputFileShort(shortStream);
   string line;
@@ -86,10 +88,16 @@ int main(int argc, char * argv[])
 	if(c==','||c=='\n'){
 	  *intPtr*=sign;
 	//	cout<<*intPtr<<endl;
+
+	  if(binning>2 && *intPtr<0)
+	    *intPtr=0;
+	  *intPtr=ceil((float)*intPtr/binning);
 	  tmp=*intPtr;
+
 	  *intPtr-=prev[prevTop];
+
 	  prev[prevTop++]=tmp;
-	  *intPtr=*intPtr>>1;
+	  //	  *intPtr=*intPtr>>1;
 	if(*intPtr>127 || *intPtr<-126)
 	  {
 	    byteBuffer[byteTop++]=-127;

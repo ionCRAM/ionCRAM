@@ -46,28 +46,31 @@ fs=$(cat $icramFiles | grep "fs\.")
 fs2=$(cat $icramFiles | grep "fs2\.")
 args=$(cat $icramFiles | grep "args\.")
 
+
+binning=$(echo $fs |grep -oP "binning[0-9]*" |sed -e 's/binning//')
+
 compression=$(file $tmpFolder/$fs)
 
 if [[ $compression == *"XZ"* ]]
 then
-    ${binFolder}reader_varLenDiffSep <(xz -dc $tmpFolder/$fs) <(xz -dc $tmpFolder/$fs2) | awk '{print "ZM:B:s,"$1}'  > $stream2 &
+    ${binFolder}reader_varLenDiffSep <(xz -dc $tmpFolder/$fs) <(xz -dc $tmpFolder/$fs2)  $binning  | awk '{print "ZM:B:s,"$1}'  > $stream2 &
     xz -dc $tmpFolder/$args > $stream3 &
 elif [[ $compression == *"gzip"* ]]
 then
-    ${binFolder}reader_varLenDiffSep <(gzip -dc $tmpFolder/$fs) <(gzip -dc $tmpFolder/$fs2) | awk '{print "ZM:B:s,"$1}'  > $stream2 &
+    ${binFolder}reader_varLenDiffSep <(gzip -dc $tmpFolder/$fs) <(gzip -dc $tmpFolder/$fs2) $binning | awk '{print "ZM:B:s,"$1}'  > $stream2 &
     gzip -dc $tmpFolder/$args > $stream3 &
 elif [[ $compression == *"bzip2"* ]]
 then
-    ${binFolder}reader_varLenDiffSep <(bzip2 -dc $tmpFolder/$fs) <(bzip2 -dc $tmpFolder/$fs2) | awk '{print "ZM:B:s,"$1}'  > $stream2 &
+    ${binFolder}reader_varLenDiffSep <(bzip2 -dc $tmpFolder/$fs) <(bzip2 -dc $tmpFolder/$fs2)  $binning | awk '{print "ZM:B:s,"$1}'  > $stream2 &
     bzip2 -dc $tmpFolder/$args > $stream3 &
 elif [[ $compression == *"zst"* ]]
 then
-    ${binFolder}reader_varLenDiffSep <(zstd -dc $tmpFolder/$fs) <(zstd -dc $tmpFolder/$fs2) | awk '{print "ZM:B:s,"$1}'  > $stream2 &
+    ${binFolder}reader_varLenDiffSep <(zstd -dc $tmpFolder/$fs) <(zstd -dc $tmpFolder/$fs2) $binning | awk '{print "ZM:B:s,"$1}'  > $stream2 &
     zstd -dc $tmpFolder/$args > $stream3 &
 fi
 
 
 paste <(cat $stream1) <(cat $stream3) <(cat $stream2)
 
-rm -f $cram_tar.stream*$r $tmpFolder/$cram_prefix.cram $tmpFolder/$cram_prefix.fs.xz $tmpFolder/$cram_prefix.fs2.xz $icramFiles $tmpFolder/$args $tmpFolder/$fs $tmpFolder/$fs2
+rm -f $cram_tar.stream*$r $tmpFolder/$cram_prefix.cram $tmpFolder/$cram_prefix.fs*.xz $tmpFolder/$cram_prefix.fs2.xz $icramFiles $tmpFolder/$args $tmpFolder/$fs $tmpFolder/$fs2
  

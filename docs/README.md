@@ -1,109 +1,144 @@
-# The Cayman theme
+# IonCram
+## Introduction
+IonCram is the first compression tool that efficiently compresses the Ion Torrent BAM files. IonCram extends the popular CRAM program by improving the compression of the flow signals. IonCram could improve the compression of CRAM by 13% achieving an overall space saving of about 45%.
 
-[![Build Status](https://travis-ci.org/pages-themes/cayman.svg?branch=master)](https://travis-ci.org/pages-themes/cayman) [![Gem Version](https://badge.fury.io/rb/jekyll-theme-cayman.svg)](https://badge.fury.io/rb/jekyll-theme-cayman)
+---
 
-*Cayman is a Jekyll theme for GitHub Pages. You can [preview the theme to see what it looks like](http://pages-themes.github.io/cayman), or even [use it today](#usage).*
+## Complilation
 
-![Thumbnail of Cayman](thumbnail.png)
+IonCram uses different compression techniques for compressing the flow signal(gzip, bzip2, xz, and zstd ). To use zstd, Please install it(https://github.com/facebook/zstd) and make it system available.
+
+### Ubuntu
+
+```bash
+apt-get install g++ libncurses5-dev  parallel python3 make libbz2-dev zstd zlib1g-dev liblzma-dev automake libtool samtools time
+./configure --binDir <install directory>
+make
+make install
+```
+If install directory is not supplied "ioncram/build/" will be used
+
+### Centos
+
+```bash
+yum -y install https://centos7.iuscommunity.org/ius-release.rpm
+yum  -y install  gcc-c++ compat-gcc-32 compat-gcc-32-c++ ncurses-devel parallel xz-devel bzip2-devel make zlib-devel automake zstd file libtool samtools time python34u
+
+./configure --binDir <install directory>
+make
+make install
+```
+
+If install directory is not supplied "ioncram/build/" will be used
+
+---
+
+## Test The System
+
+```bash
+gzip -d test_data/chrY.fa.gz
+./ioncram compress -i test_data/test1.bam -r test_data/chrY.fa -c -o test1.ioncram
+```
+
+
 
 ## Usage
 
-To use the Cayman theme:
+```bash
+./ioncram compress -i input.bam -o compressed.IonCram -r hg19.fa
 
-1. Add the following to your site's `_config.yml`:
+./ioncram decompress -i compressed.IonCram -o original.bam -r hg19.fa
+```
+---
 
-    ```yml
-    theme: jekyll-theme-cayman
-    ```
+## Statistics scripts
 
-2. Optionally, if you'd like to preview your site on your computer, add the following to your site's `Gemfile`:
+Scripts to calculate statisitics about the flowsignal and compression ratio of CRAM and ioncram can be found under scripts/ folder.
 
-    ```ruby
-    gem "github-pages", group: :jekyll_plugins
-    ```
+Scripts take the folder as argument where the ioncram binaries are installed.
 
-## Customizing
-
-### Configuration variables
-
-Cayman will respect the following variables, if set in your site's `_config.yml`:
-
-```yml
-title: [The title of your site]
-description: [A short description of your site's purpose]
+### FlowSignal Data Size
+```bash
+scripts/flowSignalInBam.sh <binaries folder> <bam file>
 ```
 
-Additionally, you may choose to set the following optional variables:
-
-```yml
-show_downloads: ["true" or "false" to indicate whether to provide a download URL]
-google_analytics: [Your Google Analytics tracking ID]
+### CRAM Statisitcs
+```bash
+scripts/scrambleStatistics.sh <binaries folder> <bam file> <reference file>
 ```
 
-### Stylesheet
+### ioncram Statisitcs
+```bash
+scripts/ionStatistics.sh <binaries folder> <bam file> <reference file> <compression tool>
+```
+Compression tools supported are : gzip, xz, and zstd.
 
-If you'd like to add your own custom styles:
+---
 
-1. Create a file called `/assets/css/style.scss` in your site
-2. Add the following content to the top of the file, exactly as shown:
-    ```scss
-    ---
-    ---
+## Tools
+ioncram has five commands compress, decompress, compare, version, and cite, You can list the available commands by "./ioncram --help". Every command has its own help page.
 
-    @import "{{ site.theme }}";
-    ```
-3. Add any custom CSS (or Sass, including imports) you'd like immediately after the `@import` line
+## Compress
+Tool for compressing SAM/BAM into IonCram format.
+### Usage
+```bash
+./ioncram compress [options] -i <input SAM/BAM> -r <input reference FASTA> -o <outputfile>
+```
 
-*Note: If you'd like to change the theme's Sass variables, you must set new values before the `@import` line in your stylesheet.*
+### Required arguments
++ -i , --input-file :
+       * File name of the input file can be SAM/BAM
++ -o , --output-file:
+       * File name of the output IonCram file
++ -r , --reference:
+       * Reference fasta file used by CRAM compression. Should be the same reference used in the mapping phase
 
-### Layouts
+### Optional arguments
++ -b , --bed-file:
+       * reads overlapping this BED FILE
++ -c , --check:
+       * Check the compressed file and compare it with the original
++ -z , --compression:
+       * Compression technique used to compress Flow signal. Options are xz, gzip, bzip2, and zstd. xz is the default technique
++ -v , --verbose:
+       * Verbose mode prints the size used by every field in the l_data
++ -l , --lossy:
+       * Lossy mode discard the highly repeated reads and uses only one read to represent.
++ -d , --deez:
+       * Use  deez tool instead of samtools and CRAM
+---
 
-If you'd like to change the theme's HTML layout:
+## Decompress
+Tool for decompressing IonCram into BAM format
+### Usage
+```bash
+./ioncram decompress -i <input IonCram> -r <input reference FASTA> -o <outputfile bam>
+```
+### Required arguments
++ -i , --input-file :
+       * File name of the input file can be SAM/BAM
++ -o , --output-file:
+       * File name of the output IonCram file
++ -r , --reference:
+       * Reference fasta file used by CRAM compression. Should be the same reference used in the mapping phase
+---
 
-1. [Copy the original template](https://github.com/pages-themes/cayman/blob/master/_layouts/default.html) from the theme's repository<br />(*Pro-tip: click "raw" to make copying easier*)
-2. Create a file called `/_layouts/default.html` in your site
-3. Paste the default layout content copied in the first step
-4. Customize the layout as you'd like
+## Compare
+Tool for comparing SAM/BAM/IonCram files
+### Usage
+```bash
+./ioncram compare -i1 <input file1> -i2 <input file1> -r <input reference FASTA>
+```
+### Required arguments
++ -i1 , --input-file1 :
+       * File name of the input file can be SAM/BAM/CRAM/IonCram
++ -i2 , --input-file2 :
+       * File name of the input file can be SAM/BAM/CRAM/IonCram
++ -r , --reference:
+       * Reference fasta file used by CRAM compression. Should be the same reference used in the mapping phase
 
-### Overriding GitHub-generated URLs
+## Cite
+Not Published yet
 
-Templates often rely on URLs supplied by GitHub such as links to your repository or links to download your project. If you'd like to override one or more default URLs:
-
-1. Look at [the template source](https://github.com/pages-themes/cayman/blob/master/_layouts/default.html) to determine the name of the variable. It will be in the form of `{{ site.github.zip_url }}`.
-2. Specify the URL that you'd like the template to use in your site's `_config.yml`. For example, if the variable was `site.github.url`, you'd add the following:
-    ```yml
-    github:
-      zip_url: http://example.com/download.zip
-      another_url: another value
-    ```
-3. When your site is built, Jekyll will use the URL you specified, rather than the default one provided by GitHub.
-
-*Note: You must remove the `site.` prefix, and each variable name (after the `github.`) should be indent with two space below `github:`.*
-
-For more information, see [the Jekyll variables documentation](https://jekyllrb.com/docs/variables/).
-
-## Roadmap
-
-See the [open issues](https://github.com/pages-themes/cayman/issues) for a list of proposed features (and known issues).
-
-## Project philosophy
-
-The Cayman theme is intended to make it quick and easy for GitHub Pages users to create their first (or 100th) website. The theme should meet the vast majority of users' needs out of the box, erring on the side of simplicity rather than flexibility, and provide users the opportunity to opt-in to additional complexity if they have specific needs or wish to further customize their experience (such as adding custom CSS or modifying the default layout). It should also look great, but that goes without saying.
-
-## Contributing
-
-Interested in contributing to Cayman? We'd love your help. Cayman is an open source project, built one contribution at a time by users like you. See [the CONTRIBUTING file](docs/CONTRIBUTING.md) for instructions on how to contribute.
-
-### Previewing the theme locally
-
-If you'd like to preview the theme locally (for example, in the process of proposing a change):
-
-1. Clone down the theme's repository (`git clone https://github.com/pages-themes/cayman`)
-2. `cd` into the theme's directory
-3. Run `script/bootstrap` to install the necessary dependencies
-4. Run `bundle exec jekyll serve` to start the preview server
-5. Visit [`localhost:4000`](http://localhost:4000) in your browser to preview the theme
-
-### Running tests
-
-The theme contains a minimal test suite, to ensure a site with the theme would build successfully. To run the tests, simply run `script/cibuild`. You'll need to run `script/bootstrap` once before the test script will work.
+## License
+Opensource
