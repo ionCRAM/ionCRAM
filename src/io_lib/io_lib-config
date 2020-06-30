@@ -21,7 +21,7 @@ _EOF_
 
 [ $# -eq 0 ] && usage 1
 
-prefix=/home/ioncram/ioncram-2.3/src/io_lib//build
+prefix=/home/mostafa/Documents/SHGP/icram/ionCRAM/src/io_lib//build
 exec_prefix=${prefix}
 includedir=${prefix}/include
 
@@ -30,7 +30,7 @@ case "$1" in
     echo "-I${prefix}/include"
     ;;
 --libs)
-    echo "-L${exec_prefix}/lib -lstaden-read  -lm -lpthread -llzma -lbz2   -lz"
+    echo "-L${exec_prefix}/lib -lstaden-read  -lm -lpthread -llzma -lbz2   -lcurl -lz"
     ;;
 --version)
     echo 1.14.9
