@@ -138,7 +138,7 @@ Tool for comparing SAM/BAM/IonCram files
        * Reference fasta file used by CRAM compression. Should be the same reference used in the mapping phase
 
 ## Cite
-Not Published yet
+Shokrof, M., Abouelhoda, M. IonCRAM: a reference-based compression tool for ion torrent sequence files. BMC Bioinformatics 21, 397 (2020). https://doi.org/10.1186/s12859-020-03726-9
 
 ## License
 Opensource
